@@ -1,7 +1,4 @@
 ---
 # tasks file for common
-- name: Include Ubuntu_APT_Proxy_Setting tasks
-  include_tasks: apt_proxy.yml
-  when: set_proxy | bool
-
-
+- name: Include llama.cpp tasks
+  include_tasks: llama.yml

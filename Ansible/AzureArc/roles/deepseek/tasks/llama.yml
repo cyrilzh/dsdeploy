@@ -24,32 +24,36 @@
 
 - name: Create model directory
   file:
-  path: "{{ model_dir }}"
-  state: directory
-  mode: "0755"
+    path: "{{ model_dir }}"
+    state: directory
+    mode: "0755"
 
 - name: Download model with huggingface-hub (推荐方法)
   command: >
     huggingface-cli download TheBloke/deepseek-coder-33B-instruct-GGUF
     --local-dir {{ model_dir }}
     --include "*Q4_0.gguf"
-    environment:
-    HF_HUB_ENABLE_HF_TRANSFER: "1"  # 加速大文件下载
-    register: download_result
-    ignore_errors: yes
-    changed_when: "'already cached' not in download_result.stderr"
+  environment:
+    HF_HUB_ENABLE_HF_TRANSFER: "1" # 加速大文件下载
+  register: download_result
+  ignore_errors: true
+  changed_when: "'already cached' not in download_result.stderr"
 
 - name: Clone llama.cpp
   git:
-  repo: https://github.com/ggerganov/llama.cpp
-  dest: "{{ llama_dir }}"
-  version: master
-  depth: 1
+    repo: https://github.com/ggerganov/llama.cpp
+    dest: "{{ llama_dir }}"
+    version: master
+    depth: 1
 
-- name: Build llama.cpp
+- name: Build llama.cpp with optimized flags
   make:
-  chdir: "{{ llama_dir }}"
-  target: ""
+    chdir: "{{ llama_dir }}"
+    target: ""
+    params:
+      LLAMA_NATIVE: "ON" # 启用本地CPU优化
+      LLAMA_AVX2: "ON" # 强制AVX2指令集（若CPU支持）
+  when: ansible_architecture == 'x86_64' # 仅x86架构生效
 
 - name: Run model inference
   command: >
@@ -57,10 +61,10 @@
     -m {{ model_dir }}/{{ model_file }}
     -p "写一个Python快速排序函数"
     --threads {{ threads }}
-    register: inference_output
-    async: 3600  # 超时时间(秒)
-    poll: 5      # 检查间隔
+  register: inference_output
+  async: 3600 # 超时时间(秒)
+  poll: 5 # 检查间隔
 
 - name: Display inference output
   debug:
-  var: inference_output.stdout_lines
+    var: inference_output.stdout_lines

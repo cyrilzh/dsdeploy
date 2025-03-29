@@ -1,3 +1,0 @@
----
-set_proxy: false
-apt_proxy: "http://your.proxy.server:port"
