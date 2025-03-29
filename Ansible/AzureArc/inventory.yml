@@ -1,0 +1,5 @@
+all:
+  hosts:
+    deepseek:
+      ansible_host: 10.1.1.120
+      ansible_user: czroot

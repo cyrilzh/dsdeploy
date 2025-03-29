@@ -1,0 +1,8 @@
+# playbook.yml
+---
+- name: Main playbook
+  hosts: all
+  become: true
+  become_user: czroot
+  roles:
+    - deepseek

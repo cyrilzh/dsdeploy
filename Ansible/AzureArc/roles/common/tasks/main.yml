@@ -1,0 +1,9 @@
+---
+# tasks file for common
+- name: Include Deploy_Defender_for_Endpoint tasks
+  include_tasks: Deploy_Defender_for_Endpoint.yml
+  when: deploy_defender_for_endpoint | bool
+
+- name: Include Another_Task_File tasks
+  include_tasks: Another_Task_File.yml
+  when: another_task_condition | bool

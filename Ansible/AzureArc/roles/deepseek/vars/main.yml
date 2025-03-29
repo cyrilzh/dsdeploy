@@ -1,0 +1,9 @@
+---
+# vars file for common
+---
+model_dir: "/opt/models"
+llama_dir: "/opt/llama.cpp"
+model_url: "https://huggingface.co/TheBloke/deepseek-coder-33B-instruct-GGUF"
+model_file: "deepseek-coder-33b-instruct.Q4_0.gguf"
+threads: "{{ ansible_processor_vcpus | default(8) }}" # 自动获取CPU核心数
+

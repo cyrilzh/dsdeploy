@@ -1,0 +1,66 @@
+---
+- name: Install dependencies
+  block:
+    - name: Install system dependencies
+      apt:
+        name:
+          - git
+          - wget
+          - build-essential
+          - python3-pip
+        state: present
+      when: ansible_os_family == 'Debian'
+
+- name: Install git-lfs (Debian/Ubuntu)
+  apt:
+    name: git-lfs
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Install huggingface-hub
+  pip:
+    name: huggingface-hub
+    state: present
+
+- name: Create model directory
+  file:
+  path: "{{ model_dir }}"
+  state: directory
+  mode: "0755"
+
+- name: Download model with huggingface-hub (推荐方法)
+  command: >
+    huggingface-cli download TheBloke/deepseek-coder-33B-instruct-GGUF
+    --local-dir {{ model_dir }}
+    --include "*Q4_0.gguf"
+    environment:
+    HF_HUB_ENABLE_HF_TRANSFER: "1"  # 加速大文件下载
+    register: download_result
+    ignore_errors: yes
+    changed_when: "'already cached' not in download_result.stderr"
+
+- name: Clone llama.cpp
+  git:
+  repo: https://github.com/ggerganov/llama.cpp
+  dest: "{{ llama_dir }}"
+  version: master
+  depth: 1
+
+- name: Build llama.cpp
+  make:
+  chdir: "{{ llama_dir }}"
+  target: ""
+
+- name: Run model inference
+  command: >
+    {{ llama_dir }}/main
+    -m {{ model_dir }}/{{ model_file }}
+    -p "写一个Python快速排序函数"
+    --threads {{ threads }}
+    register: inference_output
+    async: 3600  # 超时时间(秒)
+    poll: 5      # 检查间隔
+
+- name: Display inference output
+  debug:
+  var: inference_output.stdout_lines

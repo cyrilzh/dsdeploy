@@ -1,0 +1,3 @@
+---
+# vars file for common
+mde_installer_script: "../files/mde_installer.sh"
